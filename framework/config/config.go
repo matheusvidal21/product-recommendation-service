@@ -6,8 +6,14 @@ import (
 	"os"
 )
 
+var (
+	APP_PORT          = "APP_PORT"
+	ELASTICSEARCH_URL = "ELASTICSEARCH_URL"
+)
+
 type Config struct {
-	AppPort string
+	AppPort          string
+	ElasticsearchURL string
 }
 
 func LoadConfig() *Config {
@@ -16,7 +22,8 @@ func LoadConfig() *Config {
 	}
 
 	config := &Config{
-		AppPort: getEnv("APP_PORT", "3000"),
+		AppPort:          getEnv(APP_PORT, "3000"),
+		ElasticsearchURL: getEnv(ELASTICSEARCH_URL, "http://localhost:9200"),
 	}
 
 	return config
