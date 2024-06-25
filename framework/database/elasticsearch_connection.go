@@ -1,24 +1,39 @@
 package database
 
 import (
-	"context"
+	"crypto/tls"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v8"
 	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
-	"github.com/olivere/elastic/v7"
+	"net"
+	"net/http"
+	"time"
 )
 
-func NewElasticsearchConnection(address string) (*elastic.Client, error) {
-	client, err := elastic.NewClient(elastic.SetURL(address), elastic.SetSniff(false))
+func NewElasticsearchConnection(address string) (*elasticsearch.Client, error) {
+	client, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses: []string{
+			address,
+		},
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost:   10,
+			ResponseHeaderTimeout: time.Second,
+			DialContext:           (&net.Dialer{Timeout: time.Second}).DialContext,
+			TLSClientConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			},
+		},
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	info, code, err := client.Ping(address).Do(context.Background())
+	res, err := client.Info()
 	if err != nil {
 		return nil, err
 	}
-	logger.Info(fmt.Sprintf("Elasticsearch returned with code %d and version %s", code, info.Version.Number))
-
+	defer res.Body.Close()
+	logger.Info(fmt.Sprintf("Elasticsearch client: %s", res))
 	return client, nil
 }
