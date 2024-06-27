@@ -3,9 +3,9 @@ package dtos
 import "github.com/matheusvidal21/product-recommendation-service/domain/models"
 
 type UserActivityDTO struct {
-	UserID    string `json:"user_id"`
-	ProductID string `json:"product_id"`
-	Action    string `json:"action"`
+	UserID    string `json:"user_id" validate:"required"`
+	ProductID string `json:"product_id" validate:"required"`
+	Action    string `json:"action" validate:"required"`
 }
 
 func UserActivityToDTO(userActivity models.UserActivityDomain) UserActivityDTO {

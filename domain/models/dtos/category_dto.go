@@ -4,8 +4,8 @@ import "github.com/matheusvidal21/product-recommendation-service/domain/models"
 
 type CategoryDTO struct {
 	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required,min=8,max=1000"`
 }
 
 func CategoryToDTO(category models.CategoryDomain) CategoryDTO {
