@@ -22,3 +22,29 @@ func (a Action) IsValid() bool {
 	}
 	return false
 }
+
+func StringParseAction(action string) Action {
+	switch action {
+	case "View":
+		return ActionView
+	case "AddToCart":
+		return ActionAddToCart
+	case "Purchase":
+		return ActionPurchase
+	case "RemoveFromCart":
+		return ActionRemoveFromCart
+	case "Wishlist":
+		return ActionWishlist
+	case "Search":
+		return ActionSearch
+	case "Rate":
+		return ActionRate
+	case "Review":
+		return ActionReview
+	case "Click":
+		return ActionClick
+	case "Share":
+		return ActionShare
+	}
+	return ""
+}

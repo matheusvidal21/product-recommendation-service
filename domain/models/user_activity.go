@@ -1,6 +1,6 @@
 package models
 
-type UserActivityDoomain interface {
+type UserActivityDomain interface {
 	GetUserID() string
 	GetProductID() string
 	GetAction() string
@@ -12,7 +12,7 @@ type userActivity struct {
 	action    Action
 }
 
-func NewUserActivity(userID, productID string, action Action) UserActivityDoomain {
+func NewUserActivity(userID, productID string, action Action) UserActivityDomain {
 	return &userActivity{
 		userID:    userID,
 		productID: productID,

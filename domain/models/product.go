@@ -4,19 +4,22 @@ type ProductDomain interface {
 	GetID() string
 	GetName() string
 	GetPrice() float64
+	GetCategory() CategoryDomain
 }
 
 type product struct {
-	id    string
-	name  string
-	price float64
+	id       string
+	name     string
+	price    float64
+	category CategoryDomain
 }
 
-func NewProductDomain(id, name string, price float64) ProductDomain {
+func NewProductDomain(id, name string, price float64, category CategoryDomain) ProductDomain {
 	return &product{
-		id:    id,
-		name:  name,
-		price: price,
+		id:       id,
+		name:     name,
+		price:    price,
+		category: category,
 	}
 }
 
@@ -30,4 +33,8 @@ func (p *product) GetName() string {
 
 func (p *product) GetPrice() float64 {
 	return p.price
+}
+
+func (p *product) GetCategory() CategoryDomain {
+	return p.category
 }

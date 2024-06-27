@@ -9,39 +9,38 @@ import (
 	"strings"
 )
 
-type ProductRepositoryInterface interface {
-	FindAll() ([]models.ProductDomain, error)
-	FindByID(id string) (*models.ProductDomain, error)
-	Create(product models.ProductDomain) (*models.ProductDomain, error)
-	Update(product models.ProductDomain) (*models.ProductDomain, error)
+var CATEGORY_INDEX = "categories"
+
+type CategoryRepositoryInterface interface {
+	FindAll() ([]models.CategoryDomain, error)
+	FindByID(id string) (*models.CategoryDomain, error)
+	Create(category models.CategoryDomain) (*models.CategoryDomain, error)
+	Update(category models.CategoryDomain) (*models.CategoryDomain, error)
 	Delete(id string) error
 }
 
-var PRODUCT_INDEX = "products"
-
-type ProductRepository struct {
+type CategoryRepository struct {
 	client *elasticsearch.Client
 	ctx    context.Context
 }
 
-func NewProductRepository(client *elasticsearch.Client, ctx context.Context) *ProductRepository {
-	return &ProductRepository{
+func NewCategoryRepository(client *elasticsearch.Client, ctx context.Context) *CategoryRepository {
+	return &CategoryRepository{
 		client: client,
 		ctx:    ctx,
 	}
 }
 
-func (r *ProductRepository) FindAll() ([]models.ProductDomain, error) {
+func (r *CategoryRepository) FindAll() ([]models.CategoryDomain, error) {
 	res, err := r.client.Search(
 		r.client.Search.WithContext(r.ctx),
-		r.client.Search.WithIndex(PRODUCT_INDEX),
+		r.client.Search.WithIndex(CATEGORY_INDEX),
 	)
-
 	if err != nil {
 		return nil, err
 	}
 
-	var products []models.ProductDomain
+	var categories []models.CategoryDomain
 	var result map[string]interface{}
 	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
 		return nil, err
@@ -49,24 +48,24 @@ func (r *ProductRepository) FindAll() ([]models.ProductDomain, error) {
 
 	hits := result["hits"].(map[string]interface{})["hits"].([]interface{})
 	for _, hit := range hits {
-		var product models.ProductDomain
+		var category models.CategoryDomain
 		hitSource := hit.(map[string]interface{})["_source"]
 		source, err := json.Marshal(hitSource)
 		if err != nil {
 			return nil, err
 		}
-		err = json.Unmarshal(source, &product)
+		err = json.Unmarshal(source, &category)
 		if err != nil {
 			return nil, err
 		}
-		products = append(products, product)
+		categories = append(categories, category)
 	}
-	return products, nil
+	return categories, nil
 }
 
-func (r *ProductRepository) FindByID(id string) (*models.ProductDomain, error) {
+func (r *CategoryRepository) FindByID(id string) (*models.CategoryDomain, error) {
 	res, err := r.client.Get(
-		PRODUCT_INDEX,
+		CATEGORY_INDEX,
 		id,
 		r.client.Get.WithContext(r.ctx),
 	)
@@ -79,24 +78,25 @@ func (r *ProductRepository) FindByID(id string) (*models.ProductDomain, error) {
 		return nil, err
 	}
 
-	var product models.ProductDomain
-	if err := json.NewDecoder(res.Body).Decode(&product); err != nil {
+	var category models.CategoryDomain
+	if err := json.NewDecoder(res.Body).Decode(&category); err != nil {
 		return nil, err
 	}
-	return &product, nil
+
+	return &category, nil
 }
 
-func (r *ProductRepository) Create(product models.ProductDomain) (*models.ProductDomain, error) {
+func (r *CategoryRepository) Create(category models.CategoryDomain) (*models.CategoryDomain, error) {
 	id := uuid.New()
-	product = models.NewProductDomain(id.String(), product.GetName(), product.GetPrice(), product.GetCategory())
+	category = models.NewCategoryDomain(id.String(), category.GetName(), category.GetDescription())
 
-	body, err := json.Marshal(product)
+	body, err := json.Marshal(category)
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := r.client.Index(
-		PRODUCT_INDEX,
+		CATEGORY_INDEX,
 		strings.NewReader(string(body)),
 		r.client.Index.WithDocumentID(id.String()),
 		r.client.Index.WithContext(r.ctx),
@@ -111,19 +111,19 @@ func (r *ProductRepository) Create(product models.ProductDomain) (*models.Produc
 		return nil, err
 	}
 
-	return &product, nil
+	return &category, nil
 }
 
-func (r *ProductRepository) Update(product models.ProductDomain) (*models.ProductDomain, error) {
-	product = models.NewProductDomain(product.GetID(), product.GetName(), product.GetPrice(), product.GetCategory())
-	body, err := json.Marshal(product)
+func (r *CategoryRepository) Update(category models.CategoryDomain) (*models.CategoryDomain, error) {
+	category = models.NewCategoryDomain(category.GetID(), category.GetName(), category.GetDescription())
+	body, err := json.Marshal(category)
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := r.client.Update(
-		PRODUCT_INDEX,
-		product.GetID(),
+		CATEGORY_INDEX,
+		category.GetID(),
 		strings.NewReader(string(body)),
 		r.client.Update.WithContext(r.ctx),
 	)
@@ -136,12 +136,12 @@ func (r *ProductRepository) Update(product models.ProductDomain) (*models.Produc
 		return nil, err
 	}
 
-	return &product, nil
+	return &category, nil
 }
 
-func (r *ProductRepository) Delete(id string) error {
+func (r *CategoryRepository) Delete(id string) error {
 	res, err := r.client.Delete(
-		PRODUCT_INDEX,
+		CATEGORY_INDEX,
 		id,
 		r.client.Delete.WithContext(r.ctx),
 	)
