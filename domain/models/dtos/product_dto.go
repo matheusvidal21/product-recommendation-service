@@ -18,5 +18,5 @@ func ProductToDTO(product models.ProductDomain) ProductDTO {
 }
 
 func ProductToDomain(product ProductDTO) models.ProductDomain {
-	return models.NewProductDomain(product.ID, product.Name, product.Price, CategoryToDomain(product.Category))
+	return models.NewProductWithId(product.ID, product.Name, product.Price, CategoryToDomain(product.Category))
 }

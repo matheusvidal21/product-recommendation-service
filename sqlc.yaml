@@ -1,0 +1,18 @@
+version: "2"
+sql:
+  - schema: "sql/schema/schema.sql"
+    queries: "sql/queries"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "database"
+        out: "framework/database"
+        emit_json_tags: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "string"
+          - column: "products.price"
+            go_type: "float64"
+          - column: "products.category_id"
+            go_type: "sql.NullString"
+

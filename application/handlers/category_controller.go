@@ -72,6 +72,7 @@ func (cc *CategoryController) GetAll(c *fiber.Ctx) error {
 }
 
 func (cc *CategoryController) Update(c *fiber.Ctx) error {
+	id := c.Params("id")
 	var categoryDTO dtos.CategoryDTO
 	if err := c.BodyParser(&categoryDTO); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -81,7 +82,7 @@ func (cc *CategoryController) Update(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	category, err := cc.categoryService.UpdateCategory(categoryDTO.ID, categoryDTO.Name, categoryDTO.Description)
+	category, err := cc.categoryService.UpdateCategory(id, categoryDTO.Name, categoryDTO.Description)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

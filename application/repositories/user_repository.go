@@ -2,156 +2,120 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
-	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/google/uuid"
+	"database/sql"
 	"github.com/matheusvidal21/product-recommendation-service/domain/models"
-	"strings"
+	"github.com/matheusvidal21/product-recommendation-service/framework/database"
+	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
 )
-
-var USER_INDEX = "users"
 
 type UserRepositoryInterface interface {
 	FindAll() ([]models.UserDomain, error)
 	FindByID(id string) (*models.UserDomain, error)
 	Create(user models.UserDomain) (*models.UserDomain, error)
-	Update(user models.UserDomain) (*models.UserDomain, error)
+	Update(id string, user models.UserDomain) (*models.UserDomain, error)
 	Delete(id string) error
 }
 
 type UserRepository struct {
-	client *elasticsearch.Client
-	ctx    context.Context
+	queries *database.Queries
+	ctx     context.Context
 }
 
-func NewUserRepository(client *elasticsearch.Client, ctx context.Context) *UserRepository {
+func NewUserRepository(db *sql.DB, ctx context.Context) UserRepositoryInterface {
 	return &UserRepository{
-		client: client,
-		ctx:    ctx,
+		queries: database.New(db),
+		ctx:     ctx,
 	}
 }
 
 func (r *UserRepository) FindAll() ([]models.UserDomain, error) {
-	res, err := r.client.Search(
-		r.client.Search.WithContext(r.ctx),
-		r.client.Search.WithIndex(USER_INDEX),
-	)
+	logger.Info("Fetching all users")
+	users, err := r.queries.GetAllUsers(r.ctx)
 	if err != nil {
+		logger.Error("Error fetching users", err)
 		return nil, err
 	}
 
-	var users []models.UserDomain
-	var result map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		return nil, err
+	var userDomains []models.UserDomain
+	for _, user := range users {
+		userDomain := models.NewUserDomain(user.ID, user.Name, user.Email, "")
+		userDomains = append(userDomains, userDomain)
 	}
 
-	hits := result["hits"].(map[string]interface{})["hits"].([]interface{})
-	for _, hit := range hits {
-		var user models.UserDomain
-		hitSource := hit.(map[string]interface{})["_source"]
-		source, err := json.Marshal(hitSource)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(source, &user)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
-	return users, nil
+	logger.Info("Users fetched")
+	return userDomains, nil
 }
 
 func (r *UserRepository) FindByID(id string) (*models.UserDomain, error) {
-	res, err := r.client.Get(
-		USER_INDEX,
-		id,
-		r.client.Get.WithContext(r.ctx),
-	)
+	logger.Info("Fetching user by ID")
+	user, err := r.queries.GetUserByID(r.ctx, id)
 	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
+		logger.Error("Error fetching user", err)
 		return nil, err
 	}
 
-	var user models.UserDomain
-	if err := json.NewDecoder(res.Body).Decode(&user); err != nil {
-		return nil, err
-	}
-
-	return &user, nil
+	userDomain := models.NewUserDomain(user.ID, user.Name, user.Email, "")
+	return &userDomain, nil
 }
 
 func (r *UserRepository) Create(user models.UserDomain) (*models.UserDomain, error) {
-	id := uuid.New()
-	user = models.NewUser(id.String(), user.GetName(), user.GetEmail(), user.GetPassword())
-
-	body, err := json.Marshal(user)
+	logger.Info("Creating user")
+	pass, err := user.EncryptPassword()
 	if err != nil {
+		logger.Error("Error encrypting password", err)
 		return nil, err
 	}
 
-	res, err := r.client.Index(
-		USER_INDEX,
-		strings.NewReader(string(body)),
-		r.client.Index.WithDocumentID(id.String()),
-		r.client.Index.WithContext(r.ctx),
-	)
+	newUser, err := r.queries.CreateUser(r.ctx, database.CreateUserParams{
+		ID:       user.GetID(),
+		Name:     user.GetName(),
+		Email:    user.GetEmail(),
+		Password: pass,
+	})
 
 	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
+		logger.Error("Error creating user", err)
 		return nil, err
 	}
 
+	logger.Info("User created")
+	user = models.NewUserDomain(newUser.ID, newUser.Name, newUser.Email, "")
 	return &user, nil
 }
 
-func (r *UserRepository) Update(user models.UserDomain) (*models.UserDomain, error) {
-	user = models.NewUser(user.GetID(), user.GetName(), user.GetEmail(), user.GetPassword())
-	body, err := json.Marshal(user)
+func (r *UserRepository) Update(id string, user models.UserDomain) (*models.UserDomain, error) {
+	logger.Info("Updating user")
+	pass, err := user.EncryptPassword()
 	if err != nil {
+		logger.Error("Error encrypting password", err)
 		return nil, err
 	}
 
-	res, err := r.client.Update(
-		USER_INDEX,
-		user.GetID(),
-		strings.NewReader(string(body)),
-		r.client.Update.WithContext(r.ctx),
-	)
+	updatedUser, err := r.queries.UpdateUser(r.ctx, database.UpdateUserParams{
+		ID:       id,
+		Name:     user.GetName(),
+		Email:    user.GetEmail(),
+		Password: pass,
+	})
+
 	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
+		logger.Error("Error updating user", err)
 		return nil, err
 	}
 
+	user = models.NewUserDomain(updatedUser.ID, updatedUser.Name, updatedUser.Email, "")
+	logger.Info("User updated")
 	return &user, nil
 }
 
 func (r *UserRepository) Delete(id string) error {
-	res, err := r.client.Delete(
-		USER_INDEX,
-		id,
-		r.client.Delete.WithContext(r.ctx),
-	)
+	logger.Info("Deleting user")
+	err := r.queries.DeleteUser(r.ctx, id)
 	if err != nil {
+		logger.Error("Error deleting user", err)
 		return err
 	}
-	defer res.Body.Close()
 
-	if res.IsError() {
-		return err
-	}
+	logger.Info("User deleted")
 	return nil
 }

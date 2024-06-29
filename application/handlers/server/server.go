@@ -41,14 +41,13 @@ func NewServer() (*Server, error) {
 	server := &Server{
 		Client: client,
 		ctx:    context.Background(),
+		Config: conf,
 	}
 	server.initDependecies()
 
 	app := fiber.New()
 	app.Use(recover.New())
-	if err := app.Listen(conf.AppPort); err != nil {
-		return nil, err
-	}
+	server.App = app
 
 	server.initRoutes()
 	return server, nil

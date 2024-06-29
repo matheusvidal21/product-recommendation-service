@@ -72,6 +72,7 @@ func (pc *ProductController) GetAll(c *fiber.Ctx) error {
 }
 
 func (pc *ProductController) Update(c *fiber.Ctx) error {
+	id := c.Params("id")
 	var productDTO dtos.ProductDTO
 	if err := c.BodyParser(&productDTO); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -81,7 +82,7 @@ func (pc *ProductController) Update(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	product, err := pc.productService.UpdateProduct(productDTO.ID, productDTO.Name, productDTO.Price, dtos.CategoryToDomain(productDTO.Category))
+	product, err := pc.productService.UpdateProduct(id, productDTO.Name, productDTO.Price, dtos.CategoryToDomain(productDTO.Category))
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

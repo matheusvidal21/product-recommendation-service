@@ -35,12 +35,12 @@ func (s *CategoryService) GetCategoryByID(id string) (*models.CategoryDomain, er
 }
 
 func (s *CategoryService) CreateCategory(name, description string) (*models.CategoryDomain, error) {
-	category := models.NewCategoryDomain("", name, description)
+	category := models.NewCategoryDomain(name, description)
 	return s.repo.Create(category)
 }
 
 func (s *CategoryService) UpdateCategory(id, name, description string) (*models.CategoryDomain, error) {
-	category := models.NewCategoryDomain(id, name, description)
+	category := models.NewCategoryWithId(id, name, description)
 	return s.repo.Update(category)
 }
 

@@ -2,13 +2,11 @@ package repositories
 
 import (
 	"context"
-	"encoding/json"
-	"github.com/elastic/go-elasticsearch/v8"
+	"database/sql"
 	"github.com/matheusvidal21/product-recommendation-service/domain/models"
-	"strings"
+	"github.com/matheusvidal21/product-recommendation-service/framework/database"
+	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
 )
-
-var USER_ACTIVITY_INDEX = "user_activity"
 
 type ActivityRepositoryInterface interface {
 	SaveActivity(activity models.UserActivityDomain) (*models.UserActivityDomain, error)
@@ -17,106 +15,65 @@ type ActivityRepositoryInterface interface {
 }
 
 type ActivityRepository struct {
-	client *elasticsearch.Client
-	ctx    context.Context
+	queries *database.Queries
+	ctx     context.Context
 }
 
-func NewActivityRepository(client *elasticsearch.Client, ctx context.Context) *ActivityRepository {
+func NewActivityRepository(db *sql.DB, ctx context.Context) ActivityRepositoryInterface {
 	return &ActivityRepository{
-		client: client,
-		ctx:    ctx,
+		queries: database.New(db),
+		ctx:     ctx,
 	}
 }
 
 func (r *ActivityRepository) SaveActivity(activity models.UserActivityDomain) (*models.UserActivityDomain, error) {
-	activity = models.NewUserActivity(activity.GetUserID(), activity.GetProductID(), models.StringParseAction(activity.GetAction()))
-	body, err := json.Marshal(activity)
+	logger.Info("Saving activity")
+	err := r.queries.SaveActivity(r.ctx, database.SaveActivityParams{
+		UserID:    activity.GetUserID(),
+		ProductID: activity.GetProductID(),
+		Action:    activity.GetAction(),
+	})
 	if err != nil {
+		logger.Error("Error saving activity", err)
 		return nil, err
 	}
 
-	res, err := r.client.Index(
-		USER_ACTIVITY_INDEX,
-		strings.NewReader(string(body)),
-		r.client.Index.WithDocumentID(activity.GetUserID()+"_"+activity.GetProductID()),
-		r.client.Index.WithContext(r.ctx),
-	)
-
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		return nil, err
-	}
-
+	logger.Info("Activity saved")
 	return &activity, nil
 }
 
 func (r *ActivityRepository) GetActivityByUserId(userId string) ([]models.UserActivityDomain, error) {
-	query := `{"query": {"match": {"user_id": "` + userId + `"}}}`
-	res, err := r.client.Search(
-		r.client.Search.WithContext(r.ctx),
-		r.client.Search.WithIndex(USER_ACTIVITY_INDEX),
-		r.client.Search.WithBody(strings.NewReader(query)),
-	)
-
+	logger.Info("Fetching activities by user ID")
+	activities, err := r.queries.GetActivityByUserId(r.ctx, userId)
 	if err != nil {
+		logger.Error("Error fetching activities", err)
 		return nil, err
 	}
 
-	var activities []models.UserActivityDomain
-	var result map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		return nil, err
+	var activityDomains []models.UserActivityDomain
+	for _, activity := range activities {
+		activityDomain := models.NewUserActivity(activity.UserID, activity.ProductID, models.StringParseAction(activity.Action))
+		activityDomains = append(activityDomains, activityDomain)
 	}
 
-	hits := result["hits"].(map[string]interface{})["hits"].([]interface{})
-	for _, hit := range hits {
-		var activity models.UserActivityDomain
-		hitSource := hit.(map[string]interface{})["_source"]
-		source, err := json.Marshal(hitSource)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(source, &activity)
-		if err != nil {
-			return nil, err
-		}
-		activities = append(activities, activity)
-	}
-	return activities, nil
+	logger.Info("Activities fetched")
+	return activityDomains, nil
 }
 
 func (r *ActivityRepository) FindAll() ([]models.UserActivityDomain, error) {
-	res, err := r.client.Search(
-		r.client.Search.WithContext(r.ctx),
-		r.client.Search.WithIndex(USER_ACTIVITY_INDEX),
-	)
+	logger.Info("Fetching all activities")
+	activities, err := r.queries.GetAllActivities(r.ctx)
 	if err != nil {
+		logger.Error("Error fetching activities", err)
 		return nil, err
 	}
 
-	var activities []models.UserActivityDomain
-	var result map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		return nil, err
+	var activityDomains []models.UserActivityDomain
+	for _, activity := range activities {
+		activityDomain := models.NewUserActivity(activity.UserID, activity.ProductID, models.StringParseAction(activity.Action))
+		activityDomains = append(activityDomains, activityDomain)
 	}
 
-	hits := result["hits"].(map[string]interface{})["hits"].([]interface{})
-	for _, hit := range hits {
-		var activity models.UserActivityDomain
-		hitSource := hit.(map[string]interface{})["_source"]
-		source, err := json.Marshal(hitSource)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(source, &activity)
-		if err != nil {
-			return nil, err
-		}
-		activities = append(activities, activity)
-	}
-	return activities, nil
+	logger.Info("Activities fetched")
+	return activityDomains, nil
 }

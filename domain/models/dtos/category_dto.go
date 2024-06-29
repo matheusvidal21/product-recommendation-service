@@ -17,5 +17,5 @@ func CategoryToDTO(category models.CategoryDomain) CategoryDTO {
 }
 
 func CategoryToDomain(category CategoryDTO) models.CategoryDomain {
-	return models.NewCategoryDomain(category.ID, category.Name, category.Description)
+	return models.NewCategoryWithId(category.ID, category.Name, category.Description)
 }

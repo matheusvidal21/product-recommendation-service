@@ -1,6 +1,8 @@
 package models
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"golang.org/x/crypto/bcrypt"
+)
 
 type UserDomain interface {
 	GetID() string
@@ -8,6 +10,7 @@ type UserDomain interface {
 	GetEmail() string
 	GetPassword() string
 	ValidatePassword(string) bool
+	EncryptPassword() (string, error)
 }
 
 type user struct {
@@ -17,13 +20,12 @@ type user struct {
 	password string
 }
 
-func NewUser(id, name, email, password string) UserDomain {
-	encryptedPass, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func NewUserDomain(id, name, email, password string) UserDomain {
 	return &user{
 		id:       id,
 		name:     name,
 		email:    email,
-		password: string(encryptedPass),
+		password: password,
 	}
 }
 
@@ -46,4 +48,9 @@ func (u *user) GetPassword() string {
 func (u *user) ValidatePassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.password), []byte(password))
 	return err == nil
+}
+
+func (u *user) EncryptPassword() (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(u.password), bcrypt.DefaultCost)
+	return string(hash), err
 }

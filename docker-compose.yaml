@@ -1,18 +1,18 @@
 version: '3'
 
 services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
-    container_name: elasticsearch
+  postgres:
+    image: postgres:13
+    container_name: postgres
     environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=false
+      POSTGRES_DB: product-recommendation
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
     ports:
-      - 9200:9200
+      - "5432:5432"
     volumes:
-      - esdata:/usr/share/elasticsearch/data
+      - pgdata:/var/lib/postgresql/data
 
 volumes:
-    esdata:
-        driver: local
+  pgdata:
+    driver: local

@@ -35,12 +35,12 @@ func (s *ProductService) GetProductByID(id string) (*models.ProductDomain, error
 }
 
 func (s *ProductService) CreateProduct(name string, price float64, category models.CategoryDomain) (*models.ProductDomain, error) {
-	product := models.NewProductDomain("", name, price, category)
+	product := models.NewProductDomain(name, price, category)
 	return s.repo.Create(product)
 }
 
 func (s *ProductService) UpdateProduct(id, name string, price float64, category models.CategoryDomain) (*models.ProductDomain, error) {
-	product := models.NewProductDomain(id, name, price, category)
+	product := models.NewProductWithId(id, name, price, category)
 	return s.repo.Update(product)
 }
 

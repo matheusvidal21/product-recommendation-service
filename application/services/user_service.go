@@ -4,13 +4,14 @@ import (
 	"context"
 	"github.com/matheusvidal21/product-recommendation-service/application/repositories"
 	"github.com/matheusvidal21/product-recommendation-service/domain/models"
+	"github.com/matheusvidal21/product-recommendation-service/domain/models/dtos"
 )
 
 type UserServiceInterface interface {
-	GetAllUsers() ([]models.UserDomain, error)
+	GetAllUsers() ([]dtos.UserGetAllDTO, error)
 	GetUserByID(id string) (*models.UserDomain, error)
 	CreateUser(name, email, password string) (*models.UserDomain, error)
-	UpdateUser(name, email, password string) (*models.UserDomain, error)
+	UpdateUser(id, name, email, password string) (*models.UserDomain, error)
 	DeleteUser(id string) error
 }
 
@@ -26,8 +27,22 @@ func NewUserService(repo repositories.UserRepositoryInterface, ctx context.Conte
 	}
 }
 
-func (s *UserService) GetAllUsers() ([]models.UserDomain, error) {
-	return s.repo.FindAll()
+func (s *UserService) GetAllUsers() ([]dtos.UserGetAllDTO, error) {
+	users, err := s.repo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var usersDTO []dtos.UserGetAllDTO
+	for _, user := range users {
+		usersDTO = append(usersDTO, dtos.UserGetAllDTO{
+			ID:    user.GetID(),
+			Name:  user.GetName(),
+			Email: user.GetEmail(),
+		})
+	}
+
+	return usersDTO, nil
 }
 
 func (s *UserService) GetUserByID(id string) (*models.UserDomain, error) {
@@ -35,12 +50,12 @@ func (s *UserService) GetUserByID(id string) (*models.UserDomain, error) {
 }
 
 func (s *UserService) CreateUser(name, email, password string) (*models.UserDomain, error) {
-	user := models.NewUser("", name, email, password)
+	user := models.NewUserDomain(name, email, password)
 	return s.repo.Create(user)
 }
 
-func (s *UserService) UpdateUser(name, email, password string) (*models.UserDomain, error) {
-	user := models.NewUser("", name, email, password)
+func (s *UserService) UpdateUser(id, name, email, password string) (*models.UserDomain, error) {
+	user := models.NewUserWithId(id, name, email, password)
 	return s.repo.Update(user)
 }
 

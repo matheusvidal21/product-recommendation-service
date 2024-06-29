@@ -1,0 +1,15 @@
+### Get all activities
+GET http://localhost:3000/api/v1/activities
+
+### Get activities by user ID
+GET http://localhost:3000/api/v1/activities/{{userId}}
+
+### Save activity
+POST http://localhost:3000/api/v1/activities
+Content-Type: application/json
+
+{
+  "userId": "userId",
+  "productId": "productId",
+  "action": "viewed"
+}

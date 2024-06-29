@@ -54,7 +54,7 @@ func (uc *UserController) FindByID(c *fiber.Ctx) error {
 }
 
 func (uc *UserController) Create(c *fiber.Ctx) error {
-	var userDTO dtos.UserDTO
+	var userDTO dtos.UserCreateDTO
 	if err := c.BodyParser(&userDTO); err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -68,7 +68,7 @@ func (uc *UserController) Create(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(user)
+	return c.JSON(dtos.UserToDTO(*user))
 }
 
 func (uc *UserController) Update(c *fiber.Ctx) error {
@@ -91,8 +91,7 @@ func (uc *UserController) Update(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	userDTO.ID = id
-	user, err := uc.userService.UpdateUser(userDTO.Name, userDTO.Email, userDTO.Password)
+	user, err := uc.userService.UpdateUser(id, userDTO.Name, userDTO.Email, userDTO.Password)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
