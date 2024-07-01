@@ -6,14 +6,27 @@ package database
 
 import (
 	"database/sql"
-
-	"sql"
 )
 
 type Category struct {
 	ID          string         `json:"id"`
 	Name        string         `json:"name"`
 	Description sql.NullString `json:"description"`
+}
+
+func (c Category) GetID() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Category) GetName() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c Category) GetDescription() string {
+	//TODO implement me
+	panic("implement me")
 }
 
 type Product struct {

@@ -1,28 +1,26 @@
-### Get all products
-GET http://localhost:3000/api/v1/products
+### Get all categories
+GET http://localhost:3000/api/v1/categories
 
-### Get product by ID
-GET http://localhost:3000/api/v1/products/{{productId}}
+### Get category by ID
+GET http://localhost:3000/api/v1/categories/c4d83fde-c5a4-4f50-94dc-d60256399808
 
-### Create new product
-POST http://localhost:3000/api/v1/products
+### Create new category
+POST http://localhost:3000/api/v1/categories
 Content-Type: application/json
 
 {
-  "name": "Product 1",
-  "price": 10.99,
-  "category": "categoryId"
+  "name": "Category 1",
+  "description": "Description for Category 1"
 }
 
-### Update product
-PUT http://localhost:3000/api/v1/products/{{productId}}
+### Update category
+PUT http://localhost:3000/api/v1/categories/7a57655e-1850-4972-b679-9e04277573b9
 Content-Type: application/json
 
 {
-  "name": "Updated Product 1",
-  "price": 12.99,
-  "category": "categoryId"
+  "name": "Updated Category 1",
+  "description": "Updated description for Category 1"
 }
 
-### Delete product
-DELETE http://localhost:3000/api/v1/products/{{productId}}
+### Delete category
+DELETE http://localhost:3000/api/v1/categories/7a57655e-1850-4972-b679-9e04277573b9

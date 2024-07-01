@@ -8,8 +8,6 @@ package database
 import (
 	"context"
 	"database/sql"
-
-	"sql"
 )
 
 const createCategory = `-- name: CreateCategory :one

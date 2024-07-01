@@ -2,7 +2,7 @@
 GET http://localhost:3000/api/v1/users
 
 ### Get user by ID
-GET http://localhost:3000/api/v1/users/
+GET http://localhost:3000/api/v1/users/7af25707-9092-4a9b-8853-ee30f57f7bf8
 
 ### Create new user
 POST http://localhost:3000/api/v1/users
@@ -10,12 +10,12 @@ Content-Type: application/json
 
 {
   "name": "John Doe",
-  "email": "john.doe@example.com",
+  "email": "john.doedsadsaf@gmail.com",
   "password": "password123"
 }
 
 ### Update user
-PUT http://localhost:3000/api/v1/users/{{userId}}
+PUT http://localhost:3000/api/v1/users/7fba5076-d227-4ead-868c-3a529240b00b
 Content-Type: application/json
 
 {
@@ -25,4 +25,4 @@ Content-Type: application/json
 }
 
 ### Delete user
-DELETE http://localhost:3000/api/v1/users/{{userId}}
+DELETE http://localhost:3000/api/v1/users/7af25707-9092-4a9b-8853-ee30f57f7bf8

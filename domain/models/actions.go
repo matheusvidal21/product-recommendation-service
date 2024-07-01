@@ -1,10 +1,12 @@
 package models
 
+import "strings"
+
 type Action string
 
 const (
 	ActionView           Action = "View"
-	ActionAddToCart      Action = "AddToCart"
+	ActionAddToCart      Action = "AddTocart"
 	ActionPurchase       Action = "Purchase"
 	ActionRemoveFromCart Action = "RemoveFromCart"
 	ActionWishlist       Action = "Wishlist"
@@ -24,27 +26,27 @@ func (a Action) IsValid() bool {
 }
 
 func StringParseAction(action string) Action {
-	switch action {
-	case "View":
+	switch strings.ToLower(action) {
+	case "view":
 		return ActionView
-	case "AddToCart":
+	case "addtocart":
 		return ActionAddToCart
-	case "Purchase":
+	case "purchase":
 		return ActionPurchase
-	case "RemoveFromCart":
+	case "removefromcart":
 		return ActionRemoveFromCart
-	case "Wishlist":
+	case "wishlist":
 		return ActionWishlist
-	case "Search":
+	case "search":
 		return ActionSearch
-	case "Rate":
+	case "rate":
 		return ActionRate
-	case "Review":
+	case "review":
 		return ActionReview
-	case "Click":
+	case "click":
 		return ActionClick
-	case "Share":
+	case "share":
 		return ActionShare
 	}
-	return ""
+	return ActionView
 }

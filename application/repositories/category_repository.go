@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/matheusvidal21/product-recommendation-service/domain/models"
+	logger "github.com/matheusvidal21/product-recommendation-service/framework/config/logging"
 	"github.com/matheusvidal21/product-recommendation-service/framework/database"
-	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
 )
 
 type CategoryRepositoryInterface interface {
@@ -77,8 +77,8 @@ func (r *CategoryRepository) Create(category models.CategoryDomain) (*models.Cat
 }
 
 func (r *CategoryRepository) Update(id string, category models.CategoryDomain) (*models.CategoryDomain, error) {
-	logger.Info("Updating category")
-	category, err := r.queries.UpdateCategory(r.ctx, database.UpdateCategoryParams{
+	logger.Info("Updating category repository")
+	cat, err := r.queries.UpdateCategory(r.ctx, database.UpdateCategoryParams{
 		ID:          id,
 		Name:        category.GetName(),
 		Description: sql.NullString{String: category.GetDescription(), Valid: true},
@@ -89,7 +89,7 @@ func (r *CategoryRepository) Update(id string, category models.CategoryDomain) (
 		return nil, err
 	}
 
-	category = models.NewCategoryDomain(id, category.GetName(), category.GetDescription())
+	category = models.NewCategoryDomain(id, cat.Name, cat.Description.String)
 	logger.Info("Category updated")
 	return &category, nil
 }

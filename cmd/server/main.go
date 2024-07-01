@@ -10,6 +10,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error starting server: %s", err)
 	}
+	defer server.Db.Close()
 
 	if err := server.Run(); err != nil {
 		log.Fatalf("error running server: %s", err)

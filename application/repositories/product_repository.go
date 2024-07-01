@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/matheusvidal21/product-recommendation-service/domain/models"
+	logger "github.com/matheusvidal21/product-recommendation-service/framework/config/logging"
 	"github.com/matheusvidal21/product-recommendation-service/framework/database"
-	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
 )
 
 type ProductRepositoryInterface interface {
@@ -21,9 +21,9 @@ type ProductRepository struct {
 	ctx     context.Context
 }
 
-func NewProductRepository(db *database.Queries, ctx context.Context) ProductRepositoryInterface {
+func NewProductRepository(db *sql.DB, ctx context.Context) ProductRepositoryInterface {
 	return &ProductRepository{
-		queries: db,
+		queries: database.New(db),
 		ctx:     ctx,
 	}
 }
@@ -61,46 +61,60 @@ func (r *ProductRepository) FindByID(id string) (*models.ProductDomain, error) {
 
 func (r *ProductRepository) Create(product models.ProductDomain) (*models.ProductDomain, error) {
 	logger.Info("Creating product")
-	newProduct, err := r.queries.CreateProduct(r.ctx, database.CreateProductParams{
-		ID:    product.GetID(),
-		Name:  product.GetName(),
-		Price: product.GetPrice(),
-	})
+	var newProduct database.Product
+	var err error
+
+	if product.GetCategory().GetID() != "" {
+		newProduct, err = r.queries.CreateProduct(r.ctx, database.CreateProductParams{
+			ID:         product.GetID(),
+			Name:       product.GetName(),
+			Price:      product.GetPrice(),
+			CategoryID: sql.NullString{String: product.GetCategory().GetID(), Valid: true},
+		})
+	} else {
+		newProduct, err = r.queries.CreateProduct(r.ctx, database.CreateProductParams{
+			ID:    product.GetID(),
+			Name:  product.GetName(),
+			Price: product.GetPrice(),
+		})
+	}
 
 	if err != nil {
 		logger.Error("Error creating product", err)
 		return nil, err
 	}
 
-	if product.GetCategory().GetID() != "" {
-		newProduct.CategoryID = sql.NullString{String: product.GetCategory().GetID(), Valid: true}
-	}
-
 	logger.Info("Product created")
-	category := models.NewCategoryDomain(newProduct.CategoryID.String, "", "")
-	product = models.NewProductDomain(newProduct.ID, newProduct.Name, newProduct.Price, category)
+	product = models.NewProductDomain(newProduct.ID, newProduct.Name, newProduct.Price, product.GetCategory())
 	return &product, nil
 }
 
 func (r *ProductRepository) Update(id string, product models.ProductDomain) (*models.ProductDomain, error) {
 	logger.Info("Updating product")
-	updatedProduct, err := r.queries.UpdateProduct(r.ctx, database.UpdateProductParams{
-		ID:    id,
-		Name:  product.GetName(),
-		Price: product.GetPrice(),
-	})
+	var updatedProduct database.Product
+	var err error
+
+	if product.GetCategory().GetID() != "" {
+		updatedProduct, err = r.queries.UpdateProduct(r.ctx, database.UpdateProductParams{
+			ID:         id,
+			Name:       product.GetName(),
+			Price:      product.GetPrice(),
+			CategoryID: sql.NullString{String: product.GetCategory().GetID(), Valid: true},
+		})
+	} else {
+		updatedProduct, err = r.queries.UpdateProduct(r.ctx, database.UpdateProductParams{
+			ID:    id,
+			Name:  product.GetName(),
+			Price: product.GetPrice(),
+		})
+	}
 
 	if err != nil {
 		logger.Error("Error updating product", err)
 		return nil, err
 	}
 
-	if product.GetCategory().GetID() != "" {
-		updatedProduct.CategoryID = sql.NullString{String: product.GetCategory().GetID(), Valid: true}
-	}
-
-	category := models.NewCategoryDomain(updatedProduct.CategoryID.String, "", "")
-	product = models.NewProductDomain(updatedProduct.ID, updatedProduct.Name, updatedProduct.Price, category)
+	product = models.NewProductDomain(updatedProduct.ID, updatedProduct.Name, updatedProduct.Price, product.GetCategory())
 	logger.Info("Product updated")
 	return &product, nil
 }

@@ -7,13 +7,21 @@ import (
 )
 
 var (
-	APP_PORT          = "APP_PORT"
-	ELASTICSEARCH_URL = "ELASTICSEARCH_URL"
+	APP_PORT     = "APP_PORT"
+	POSTGRES_URL = "POSTGRES_URL"
+	DB_NAME      = "DB_NAME"
+	DB_USER      = "DB_USER"
+	DB_PASSWORD  = "DB_PASSWORD"
+	DB_PORT      = "DB_PORT"
 )
 
 type Config struct {
-	AppPort          string
-	ElasticsearchURL string
+	AppPort     string
+	PostgresURL string
+	DBName      string
+	DBUser      string
+	DBPassword  string
+	DBPort      string
 }
 
 func LoadConfig() *Config {
@@ -22,8 +30,12 @@ func LoadConfig() *Config {
 	}
 
 	config := &Config{
-		AppPort:          getEnv(APP_PORT, "3000"),
-		ElasticsearchURL: getEnv(ELASTICSEARCH_URL, "http://localhost:9200"),
+		AppPort:     getEnv(APP_PORT, "3000"),
+		PostgresURL: getEnv(POSTGRES_URL, "localhost"),
+		DBName:      getEnv(DB_NAME, "product-recommendation"),
+		DBUser:      getEnv(DB_USER, "postgres"),
+		DBPassword:  getEnv(DB_PASSWORD, "postgres"),
+		DBPort:      getEnv(DB_PORT, "5432"),
 	}
 
 	return config

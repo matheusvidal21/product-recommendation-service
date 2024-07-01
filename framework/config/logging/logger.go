@@ -33,6 +33,7 @@ func init() {
 	})
 	log.SetReportCaller(true)
 	Info("Logger initialized")
+	Info("Log level: " + log.GetLevel().String())
 }
 
 func Info(message string, tags ...logrus.Fields) {
@@ -52,7 +53,7 @@ func Error(message string, err error, tags ...logrus.Fields) {
 }
 
 func getLevelLogs() logrus.Level {
-	level := strings.TrimSpace(os.Getenv(LOG_LEVEL))
+	level := strings.ToLower(strings.TrimSpace(os.Getenv(LOG_LEVEL)))
 	switch level {
 	case "info":
 		return logrus.InfoLevel
@@ -67,7 +68,7 @@ func getLevelLogs() logrus.Level {
 	case "panic":
 		return logrus.PanicLevel
 	default:
-		return logrus.InfoLevel
+		return logrus.DebugLevel
 	}
 }
 

@@ -2,14 +2,14 @@
 GET http://localhost:3000/api/v1/activities
 
 ### Get activities by user ID
-GET http://localhost:3000/api/v1/activities/{{userId}}
+GET http://localhost:3000/api/v1/activities/7fba5076-d227-4ead-868c-3a529240b00b
 
 ### Save activity
 POST http://localhost:3000/api/v1/activities
 Content-Type: application/json
 
 {
-  "userId": "userId",
-  "productId": "productId",
-  "action": "viewed"
+  "user_id": "7fba5076-d227-4ead-868c-3a529240b00b",
+  "product_id": "1ff19830-52a9-4cec-854c-c430263af605",
+  "action": "view"
 }

@@ -2,9 +2,8 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"fmt"
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gofiber/fiber/v2"
 	recover "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/matheusvidal21/product-recommendation-service/application/handlers"
@@ -12,14 +11,13 @@ import (
 	"github.com/matheusvidal21/product-recommendation-service/application/services"
 	"github.com/matheusvidal21/product-recommendation-service/framework/config"
 	"github.com/matheusvidal21/product-recommendation-service/framework/database"
-	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
 )
 
 type Server struct {
 	App                *fiber.App
 	ctx                context.Context
 	Config             *config.Config
-	Client             *elasticsearch.Client
+	Db                 *sql.DB
 	CategoryController handlers.CategoryControllerInterface
 	UserController     handlers.UserControllerInterface
 	ProductController  handlers.ProductControllerInterface
@@ -32,14 +30,13 @@ func NewServer() (*Server, error) {
 		return nil, errors.New("error loading config")
 	}
 
-	client, err := database.NewElasticsearchConnection(conf.ElasticsearchURL)
+	db, err := database.NewPostgresConnection(conf.PostgresURL, conf.DBPort, conf.DBUser, conf.DBPassword, conf.DBName)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info(fmt.Sprintf("Connected to Elasticsearch: %s", conf.ElasticsearchURL))
 
 	server := &Server{
-		Client: client,
+		Db:     db,
 		ctx:    context.Background(),
 		Config: conf,
 	}
@@ -82,20 +79,20 @@ func (s *Server) initRoutes() {
 }
 
 func (s *Server) initDependecies() {
-	userRepo := repositories.NewUserRepository(s.Client, s.ctx)
+	userRepo := repositories.NewUserRepository(s.Db, s.ctx)
 	userService := services.NewUserService(userRepo, s.ctx)
 	s.UserController = handlers.NewUserController(userService)
 
-	categoryRepo := repositories.NewCategoryRepository(s.Client, s.ctx)
+	categoryRepo := repositories.NewCategoryRepository(s.Db, s.ctx)
 	categoryService := services.NewCategoryService(categoryRepo, s.ctx)
 	s.CategoryController = handlers.NewCategoryController(categoryService)
 
-	productRepo := repositories.NewProductRepository(s.Client, s.ctx)
-	productService := services.NewProductService(productRepo, s.ctx)
+	productRepo := repositories.NewProductRepository(s.Db, s.ctx)
+	productService := services.NewProductService(productRepo, categoryService, s.ctx)
 	s.ProductController = handlers.NewProductController(productService)
 
-	activityRepo := repositories.NewActivityRepository(s.Client, s.ctx)
-	activityService := services.NewActivityService(activityRepo, s.ctx)
+	activityRepo := repositories.NewActivityRepository(s.Db, s.ctx)
+	activityService := services.NewActivityService(activityRepo, s.ctx, productService, userService)
 	s.ActivityController = handlers.NewActivityController(activityService)
 }
 

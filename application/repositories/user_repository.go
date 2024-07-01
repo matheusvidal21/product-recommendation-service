@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/matheusvidal21/product-recommendation-service/domain/models"
+	logger "github.com/matheusvidal21/product-recommendation-service/framework/config/logging"
 	"github.com/matheusvidal21/product-recommendation-service/framework/database"
-	logger "github.com/matheusvidal21/product-recommendation-service/framework/logging"
 )
 
 type UserRepositoryInterface interface {
